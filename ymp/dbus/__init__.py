@@ -20,7 +20,7 @@ class MediaPlayer2(
     TracklistInterface,
     PlaylistsInterface
 ):
-    def __init__(self):
+    def __init__(self, backend):
         bus_name = dbus.service.BusName(
             'org.mpris.MediaPlayer2.ymp', bus=dbus.SessionBus()
         )
@@ -29,6 +29,8 @@ class MediaPlayer2(
             self, bus_name, '/org/mpris/MediaPlayer2'
         )
 
+        self.backend = backend
+
         self._properties = {
             MediaPlayer2Interface.INTERFACE: PropertyList(),
             PlayerInterface.INTERFACE: PropertyList(),
@@ -36,10 +38,13 @@ class MediaPlayer2(
             PlaylistsInterface.INTERFACE: PropertyList()
         }
 
-        MediaPlayer2Interface.register_properties(self._properties)
-        PlayerInterface.register_properties(self._properties)
-        TracklistInterface.register_properties(self._properties)
-        PlaylistsInterface.register_properties(self._properties)
+        MediaPlayer2Interface.register_properties(self._properties, backend)
+        PlayerInterface.register_properties(self._properties, backend)
+        TracklistInterface.register_properties(self._properties, backend)
+        PlaylistsInterface.register_properties(self._properties, backend)
+
+    def get_property(self, interface, property_name):
+        return self._properties[interface].get_property(property_name)
 
     def get_all_properties(self, interface):
         return self._properties[interface].get_all_properties()

@@ -9,23 +9,23 @@ class PlayerInterface(dbus.service.Object):
     INTERFACE = 'org.mpris.MediaPlayer2.Player'
 
     @classmethod
-    def register_properties(cls, proplist):
+    def register_properties(cls, proplist, backend):
         for p in [
-            ('PlaybackStatus', 'Paused', PropertyType.read_only),
+            ('PlaybackStatus', backend.playback_status, PropertyType.read_only),
             # ('LoopStatus', 'Track', PropertyType.read_write),
-            ('Rate', 1.0, PropertyType.read_write),
-            ('Shuffle', False, PropertyType.read_write),
-            ('Metadata', Metadata(), PropertyType.read_only),
-            ('Volume', 1.0, PropertyType.read_write),
-            ('Position', dbus.Int64(0), PropertyType.read_only),
-            ('MinimumRate', 1.0, PropertyType.read_only),
-            ('MaximumRate', 1.0, PropertyType.read_only),
-            ('CanGoNext', True, PropertyType.read_only),
-            ('CanGoPrevious', True, PropertyType.read_only),
-            ('CanPlay', True, PropertyType.read_only),
-            ('CanPause', True, PropertyType.read_only),
-            ('CanSeek', False, PropertyType.read_only),
-            ('CanControl', True, PropertyType.read_only),
+            ('Rate', 1.0, backend.rate, PropertyType.read_write),
+            ('Shuffle', backend.shuffle, PropertyType.read_write),
+            ('Metadata', backend.metadata, PropertyType.read_only),
+            ('Volume', backend.volume, PropertyType.read_write),
+            ('Position', backend.position, PropertyType.read_only),
+            ('MinimumRate', backend.minimum_rate, PropertyType.read_only),
+            ('MaximumRate', backend.maximum_rate, PropertyType.read_only),
+            ('CanGoNext', backend.can_go_next, PropertyType.read_only),
+            ('CanGoPrevious', backend.can_go_previous, PropertyType.read_only),
+            ('CanPlay', backend.can_play, PropertyType.read_only),
+            ('CanPause', backend.can_pause, PropertyType.read_only),
+            ('CanSeek', backend.can_seek, PropertyType.read_only),
+            ('CanControl', backend.can_control, PropertyType.read_only),
         ]:
             proplist[cls.INTERFACE].add_property(*p)
 
@@ -35,36 +35,42 @@ class PlayerInterface(dbus.service.Object):
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Next(self):
-        pass
+        self.backend.next()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Previous(self):
-        pass
+        self.backend.previous()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Pause(self):
-        pass
+        self.backend.pause()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def PlayPause(self):
-        pass
+        # TODO check CanPlay
+        self.backend.play_pause()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Stop(self):
-        pass
+        self.backend.stop()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Play(self):
-        pass
+        # TODO check CanPlay
+        self.backend.play()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player', in_signature='x')
     def Seek(self, offset):
-        pass
+        # TODO check CanSeek
+        self.backend.seek(offset)
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player', in_signature='ox')
     def SetPosition(self, trackid, position):
-        pass
+        # TODO check if trackid matches current trackid
+        if position < 0:
+            return
+        self.backend.set_position(trackid, position)
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player', in_signature='s')
     def OpenUri(self, uri):
-        pass
+        self.backend.open_uri(uri)

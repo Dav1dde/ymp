@@ -11,13 +11,12 @@ def PropertyInterface(*INTERFACE_NAMES):
             in_signature='ss', out_signature='v'
         )
         def Get(self, interface_name, property_name):
-            properties = self.GetAll(interface_name)
-            if property_name in properties:
-                return properties[property_name]
+            if interface_name in INTERFACE_NAMES:
+                self.get_property(interface_name, property_name)
 
             raise dbus.exceptions.DBusException(
-                'The "{}" object does not have a property "{}"'
-                .format(self.__class__.__name__, property_name)
+                'The "{}" object does not implement the "{}" interface'
+                .format(self.__class__.__name__, interface_name)
             )
 
         @dbus.service.method(
@@ -51,6 +50,10 @@ def PropertyInterface(*INTERFACE_NAMES):
                 'The "{}" object does not implement the "{}" interface'
                 .format(self.__class__.__name__, interface_name)
             )
+
+        @abstractclassmethod
+        def get_property(self, interface_name, property_name):
+            raise NotImplementedError()
 
         @abstractclassmethod
         def get_all_properties(self, interface_name):
@@ -122,7 +125,10 @@ class Property(Hashable):
                 'Property "{}" cannot be written'.format(self._name)
             )
 
-        self.value = value
+        if callable(self.value):
+            self.value(value)
+        else:
+            self.value = value
         self.valid = True
 
     def get(self):
@@ -134,6 +140,8 @@ class Property(Hashable):
         if not self.valid:
             raise ValueError('Property "{}" is invalid'.format(self._name))
 
+        if callable(self.value):
+            return self.value()
         return self.value
 
     @property

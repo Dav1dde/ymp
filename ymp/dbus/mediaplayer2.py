@@ -7,13 +7,13 @@ class MediaPlayer2Interface(dbus.service.Object):
     INTERFACE = 'org.mpris.MediaPlayer2'
 
     @classmethod
-    def register_properties(cls, proplist):
+    def register_properties(cls, proplist, backend):
         for p in [
-            ('CanQuit', False, PropertyType.read_only),
+            ('CanQuit', backend.can_quit, PropertyType.read_only),
             # ('Fullscreen', False, PropertyType.read_write),
             # ('CanSetFullscreen', False, PropertyType.read_only),
-            ('CanRaise', False, PropertyType.read_only),
-            ('HasTrackList', True, PropertyType.read_only),
+            ('CanRaise', backend.can_raise, PropertyType.read_only),
+            ('HasTrackList', backend.has_track_list, PropertyType.read_only),
             ('Identity', 'Youtube media player', PropertyType.read_only),
             ('DesktopEntry', 'ymp', PropertyType.read_only),
             ('SupportedUriSchemes', ['http'], PropertyType.read_only),

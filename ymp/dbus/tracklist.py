@@ -7,10 +7,10 @@ class TracklistInterface(dbus.service.Object):
     INTERFACE = 'org.mpris.MediaPlayer2.TrackList'
 
     @classmethod
-    def register_properties(cls, proplist):
+    def register_properties(cls, proplist, backend):
         for p in [
-            ('Tracks', dbus.Array(signature='o'), PropertyType.read_only),
-            ('CanEditTrack', False, PropertyType.read_only),
+            ('Tracks', backend.tracks, PropertyType.read_only),
+            ('CanEditTrack', backend.can_edit_track, PropertyType.read_only),
         ]:
             proplist[cls.INTERFACE].add_property(*p)
 
@@ -19,21 +19,21 @@ class TracklistInterface(dbus.service.Object):
         in_signature='ao', out_signature='aa{sv}'
     )
     def GetTracksMetadata(self, trackids):
-        return [{}]
+        return self.backend.get_tracks_metadata(trackids)
 
     @dbus.service.method(
         'org.mpris.MediaPlayer2.TrackList', in_signature='sob'
     )
     def AddTrack(self, uri, after_track, set_as_current):
-        pass
+        self.backend.add_track(uri, after_track, set_as_current)
 
     @dbus.service.method('org.mpris.MediaPlayer2.TrackList', in_signature='o')
     def RemoveTrack(self, trackid):
-        pass
+        self.backend.remove_track(trackid)
 
     @dbus.service.method('org.mpris.MediaPlayer2.TrackList', in_signature='o')
     def GoTo(self, trackid):
-        pass
+        self.backend.goto(trackid)
 
     @dbus.service.signal('org.mpris.MediaPlayer2.TrackList', signature='aoo')
     def TrackListReplaced(self, tracks, current_track):
