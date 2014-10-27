@@ -1,6 +1,7 @@
 import dbus.service
 import dbus
 
+from ymp.dbus.types.metadata import Metadata
 from ymp.dbus.property import PropertyType
 
 
@@ -14,7 +15,7 @@ class PlayerInterface(dbus.service.Object):
             # ('LoopStatus', 'Track', PropertyType.read_write),
             ('Rate', 1.0, PropertyType.read_write),
             ('Shuffle', False, PropertyType.read_write),
-            ('Metadata', dbus.Dictionary(signature='sv', variant_level=1), PropertyType.read_only),
+            ('Metadata', Metadata(), PropertyType.read_only),
             ('Volume', 1.0, PropertyType.read_write),
             ('Position', dbus.Int64(0), PropertyType.read_only),
             ('MinimumRate', 1.0, PropertyType.read_only),
@@ -27,6 +28,10 @@ class PlayerInterface(dbus.service.Object):
             ('CanControl', True, PropertyType.read_only),
         ]:
             proplist[cls.INTERFACE].add_property(*p)
+
+    @dbus.service.signal('org.mpris.MediaPlayer2.Player', signature='x')
+    def Seeked(self, position):
+        pass
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Next(self):
@@ -63,4 +68,3 @@ class PlayerInterface(dbus.service.Object):
     @dbus.service.method('org.mpris.MediaPlayer2.Player', in_signature='s')
     def OpenUri(self, uri):
         pass
-

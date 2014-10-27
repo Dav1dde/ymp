@@ -64,7 +64,7 @@ def PropertyInterface(*INTERFACE_NAMES):
 
 
 class PropertyType(Enum):
-    read_only  = 0b01
+    read_only = 0b01
     write_only = 0b10
     read_write = 0b11
 
