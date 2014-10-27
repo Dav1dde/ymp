@@ -12,7 +12,7 @@ def PropertyInterface(*INTERFACE_NAMES):
         )
         def Get(self, interface_name, property_name):
             if interface_name in INTERFACE_NAMES:
-                self.get_property(interface_name, property_name)
+                return self.get_property(interface_name, property_name)
 
             raise dbus.exceptions.DBusException(
                 'The "{}" object does not implement the "{}" interface'
@@ -41,8 +41,8 @@ def PropertyInterface(*INTERFACE_NAMES):
         @dbus.service.signal(dbus.PROPERTIES_IFACE, signature='sa{sv}as')
         def PropertiesChanged(self, interface_name,
                               changed_properties, invalidated_properties):
-            if interface_name not in INTERFACE_NAMES:
-                self.properties_changed(
+            if interface_name in INTERFACE_NAMES:
+                return self.properties_changed(
                     interface_name, changed_properties, invalidated_properties
                 )
 
@@ -72,9 +72,17 @@ class PropertyType(Enum):
     read_write = 0b11
 
 
+class MySet(set):
+    def get(self, element, default=None):
+        for e in self:
+            if hash(e) == hash(element) and e == element:
+                return e
+        return default
+
+
 class PropertyList(object):
     def __init__(self):
-        self.properties = set()
+        self.properties = MySet()
 
     def add_property(self, name, value, ptype):
         if name in self.properties:
@@ -166,4 +174,8 @@ class Property(Hashable):
         return hash(self._name)
 
     def __eq__(self, other):
-        return isinstance(other, Property) and other.name == self._name
+        if isinstance(other, Property):
+            return other.name == self._name
+        if isinstance(other, str):
+            return other == self._name
+        return False

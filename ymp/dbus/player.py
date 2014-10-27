@@ -12,8 +12,8 @@ class PlayerInterface(dbus.service.Object):
     def register_properties(cls, proplist, backend):
         for p in [
             ('PlaybackStatus', backend.playback_status, PropertyType.read_only),
-            # ('LoopStatus', 'Track', PropertyType.read_write),
-            ('Rate', 1.0, backend.rate, PropertyType.read_write),
+            ('LoopStatus', backend.loop_status, PropertyType.read_write),
+            ('Rate', backend.rate, PropertyType.read_write),
             ('Shuffle', backend.shuffle, PropertyType.read_write),
             ('Metadata', backend.metadata, PropertyType.read_only),
             ('Volume', backend.volume, PropertyType.read_write),

@@ -3,11 +3,19 @@ from abc import ABCMeta, abstractclassmethod
 
 class Backend(object, metaclass=ABCMeta):
     @abstractclassmethod
-    def can_raise(self):
+    def can_quit(self):
         pass
 
     @abstractclassmethod
-    def can_quit(self):
+    def fullscreen(self, arg=None):
+        return
+
+    @abstractclassmethod
+    def can_set_fullscreen(self):
+        pass
+
+    @abstractclassmethod
+    def can_raise(self):
         pass
 
     @abstractclassmethod
@@ -24,6 +32,10 @@ class Backend(object, metaclass=ABCMeta):
 
     @abstractclassmethod
     def playback_status(self):
+        pass
+
+    @abstractclassmethod
+    def loop_status(self, arg=None):
         pass
 
     @abstractclassmethod
@@ -127,7 +139,7 @@ class Backend(object, metaclass=ABCMeta):
         pass
 
     @abstractclassmethod
-    def activate_playlist(self, trackids):
+    def activate_playlist(self, playlistid):
         pass
 
     @abstractclassmethod

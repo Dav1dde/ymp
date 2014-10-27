@@ -11,7 +11,7 @@ def main():
     loop = GObject.MainLoop()
     DBusGMainLoop(set_as_default=True)
 
-    backend = VLCBackend()
+    backend = VLCBackend(loop)
     obj = MediaPlayer2(backend)
 
     loop.run()
