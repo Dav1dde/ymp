@@ -13,8 +13,9 @@ import dbus
 
 
 class VLCBackend(Backend):
-    def __init__(self, loop):
+    def __init__(self, loop, provider):
         self.loop = loop
+        self.provider = provider
 
         self.instance = vlc.Instance('--no-video')
         self.player = self.instance.media_player_new()
@@ -27,7 +28,7 @@ class VLCBackend(Backend):
 
     def fullscreen(self, arg=None):
         if arg is None:
-            return bool(self.player.get_fullscreen())
+            return self.player.get_fullscreen() == 0
         return
 
     def can_set_fullscreen(self):
@@ -65,12 +66,11 @@ class VLCBackend(Backend):
 
     def shuffle(self, arg=None):
         if arg is None:
-            return self._shuffle
-        self._shuffle = arg
+            return self.provider.shuffle
+        self.provider.shuffle = bool(arg)
 
     def metadata(self):
-        # TODO
-        return Metadata()
+        return self.provider.current_song.metadata
 
     def volume(self, arg=None):
         if arg is None:
@@ -78,7 +78,6 @@ class VLCBackend(Backend):
         self.player.audio_set_volume(min(max(0, arg*100.0), 100))
 
     def position(self):
-        # TODO check value
         return dbus.Int64(max(self.player.get_time()*1000, 0))
 
     def minimum_rate(self):
@@ -91,31 +90,31 @@ class VLCBackend(Backend):
 
     def can_go_next(self):
         # TODO
-        return True
+        return self.provider.can_go_next()
 
     def can_go_previous(self):
         # TODO
-        return True
+        return self.provider.can_go_previous()
 
     def can_play(self):
-        return bool(self.player.will_play())
+        return self.player.will_play() == 0
 
     def can_pause(self):
-        return bool(self.player.can_pause())
+        return self.player.can_pause() == 0
 
     def can_seek(self):
-        return bool(self.player.is_seekable())
+        return self.player.is_seekable() == 0
 
     def can_control(self):
         return True
 
     def next(self):
-        # TODO
-        pass
+        song = self.provider.next()
+        self.player.set_mrl(song.uri)
 
     def previous(self):
-        # TODO
-        pass
+        song = self.provider.previous()
+        self.player.set_mrl(song.uri)
 
     def pause(self):
         self.player.set_pause(1)
@@ -130,35 +129,32 @@ class VLCBackend(Backend):
         self.player.play()
 
     def seek(self, position):
-        self.player.set_time(self.player.get_time() + position*1000)
+        self.player.set_time(self.player.get_time() + position*100000)
 
     def set_position(self, trackid, position):
         # TODO trackid, check can seek
-        self.player.set_time(position*1000)
+        self.player.set_time(position*100000)
 
     def open_uri(self, uri):
-        # TODO
-        pass
+        # TODO disallow?
+        self.player.set_mrl(uri)
 
     def playlist_count(self):
-        # TODO
-        return 0
+        return len(self.provider.playlists)
 
     def orderings(self):
-        # TODO
+        # we take it as we get it from youtube/grooveshark, whatever
         return [PlaylistOrdering.USER_DEFINED]
 
     def active_playlist(self):
-        # TODO
-        return MaybePlaylist(False, '/invalid', '', '')
+        return self.provider.playlist.dbus_playlist
 
     def activate_playlist(self, playlistid):
-        # TODO
-        pass
+        self.provider.activate_playlist(playlistid)
+        self.player.set_mrl(self.provider.current_song.uri)
 
     def get_playlists(self, index, max_count, order, reversed_):
-        # TODO
-        return []
+        return self.provider.dbus_playlists
 
     def tracks(self):
         return []
