@@ -1,10 +1,12 @@
 from abc import ABCMeta, abstractclassmethod
+from collections import defaultdict
 import re
 
 
 class Backend(object, metaclass=ABCMeta):
     def __init__(self):
         self._notifactions = list()
+        self._events = defaultdict(list)
 
     def add_notification_callback(self, cb):
         self._notifactions.append(cb)
@@ -26,6 +28,16 @@ class Backend(object, metaclass=ABCMeta):
 
         for cb in self._notifactions:
             cb(name, value)
+
+    def add_event_callback(self, name, cb):
+        self._events[name].append(cb)
+
+    def remove_event_callback(self, name, cb):
+        self._events[name].remove(cb)
+
+    def emit_event(self, name):
+        for cb in self._events[name]:
+            cb()
 
     @abstractclassmethod
     def can_quit(self):

@@ -43,6 +43,9 @@ class MediaPlayer2(
         TracklistInterface.register_properties(self._properties, backend)
         PlaylistsInterface.register_properties(self._properties, backend)
 
+        self.backend.add_event_callback(
+            'seeked', lambda: self.Seeked(self.backend.position())
+        )
         self.backend.add_notification_callback(self.emit_notification)
 
     def emit_notification(self, name, value):

@@ -113,8 +113,7 @@ class VLCBackend(Backend):
         self.loop.quit()
 
     def has_track_list(self):
-        # TODO maybe
-        return False
+        return False  # TODO maybe
 
     def playback_status(self):
         state = self.player.get_state()
@@ -210,11 +209,23 @@ class VLCBackend(Backend):
         self._is_stopped = False
 
     def seek(self, position):
-        self.player.set_time(self.player.get_time() + position*100000)
+        # TODO fix seeking backwards, somehow doesn't work
+        new_pos = max(self.player.get_time() + int(position/1000), 0)
+        if new_pos > self.player.get_length():
+            return self.next()
+
+        self.player.set_time(new_pos)
+        self.emit_event('seeked')
 
     def set_position(self, trackid, position):
-        # TODO trackid, check can seek
-        self.player.set_time(position*100000)
+        # TODO fix seeking backwards, somehow doesn't work
+        position = int(position/1000)
+        if position < 0 or position > self.player.get_length():
+            return
+
+        if trackid == self.provider.current_song.id and self.can_seek():
+            self.player.set_time(position)
+            self.emit_event('seeked')
 
     def open_uri(self, uri):
         if self._vlc_media_event_manger is not None:
@@ -256,8 +267,7 @@ class VLCBackend(Backend):
         self.play()
 
     def get_playlists(self, index, max_count, order, reversed_):
-        # TODO args
-        return self.provider.dbus_playlists
+        return self.provider.dbus_playlists  # TODO args
 
     def tracks(self):
         return []
