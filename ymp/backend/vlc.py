@@ -21,8 +21,6 @@ def vlc_state_to_mpris_state(state):
         vlc.State.Playing: PlaybackStatus.PLAYING
     }.get(state, PlaybackStatus.STOPPED)
 
-# TODO signals
-
 
 class VLCBackend(Backend):
     def __init__(self, loop, provider):
@@ -36,7 +34,9 @@ class VLCBackend(Backend):
 
         self._loop_status = LoopStatus.PLAYLIST
         self._shuffle = True
+
         self._is_stopped = True
+        self._has_media = False
 
         # in heisenbugs we trust
         # we need to keep references of event managers
@@ -86,7 +86,8 @@ class VLCBackend(Backend):
     def on_media_stopped(self, event):
         self._is_stopped = True
         self.emit_notification('PlaybackStatus', PlaybackStatus.STOPPED)
-        self.emit_notification('CanPlay', True)
+
+        self.emit_notification('CanPlay', self._has_media)
         self.emit_notification('CanPause', False)
 
     # other stuff
@@ -151,12 +152,10 @@ class VLCBackend(Backend):
         return dbus.Int64(max(self.player.get_time()*1000, 0))
 
     def minimum_rate(self):
-        # TODO
-        return 1.0
+        return 1.0  # TODO
 
     def maximum_rate(self):
-        # TODO
-        return 1.0
+        return 1.0  # TODO
 
     def can_go_next(self):
         return self.provider.can_go_next()
@@ -165,8 +164,9 @@ class VLCBackend(Backend):
         return self.provider.can_go_previous()
 
     def can_play(self):
-        # return not (self.player.is_playing() == 1) or self._is_stopped
-        return self._is_stopped or self.player.will_play() == 1
+        if self._is_stopped and self._has_media:
+            return True
+        return self.player.will_play() == 1
 
     def can_pause(self):
         # return self.player.is_playing() == 1
@@ -193,7 +193,7 @@ class VLCBackend(Backend):
         self._is_stopped = False
 
     def play_pause(self):
-        if self._is_stopped:
+        if self._is_stopped and self._has_media:
             # explicitly play if stopped, or else vlc won't start playback
             return self.play()
         self.player.pause()
@@ -221,6 +221,8 @@ class VLCBackend(Backend):
             _vlc_detach_all_events(self._vlc_media_event_manger)
 
         self._is_stopped = True
+        self._has_media = True
+
         media = self.player.set_mrl(uri)
 
         em = media.event_manager()
@@ -232,6 +234,8 @@ class VLCBackend(Backend):
         )
         self._vlc_media_event_manger = em
 
+        self.emit_notification('CanPlay')
+        self.emit_notification('CanPause')
         self.emit_notification('CanGoNext')
         self.emit_notification('CanGoPrevious')
         self.emit_notification('Metadata')
