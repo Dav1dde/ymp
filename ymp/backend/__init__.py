@@ -1,7 +1,32 @@
 from abc import ABCMeta, abstractclassmethod
+import re
 
 
 class Backend(object, metaclass=ABCMeta):
+    def __init__(self):
+        self._notifactions = list()
+
+    def add_notification_callback(self, cb):
+        self._notifactions.append(cb)
+
+    def remove_notification_callback(self, cb):
+        self._notifactions.remove(cb)
+
+    def emit_notification(self, name, value=None):
+        def err():
+            raise ValueError(
+                'unable to infer value for property "{}"'.format(name)
+            )
+
+        if value is None:
+            n = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+            n = re.sub('([a-z0-9])([A-Z])', r'\1_\2', n).lower()
+            fun = getattr(self, n, err)
+            value = fun()
+
+        for cb in self._notifactions:
+            cb(name, value)
+
     @abstractclassmethod
     def can_quit(self):
         pass

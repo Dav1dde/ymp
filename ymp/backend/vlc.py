@@ -6,14 +6,28 @@ from ymp.dbus.types.loop import LoopStatus
 from ymp.backend import Backend
 from ymp.lib import vlc
 
+from gi.repository import GObject
 import dbus
 
+
+def _vlc_detach_all_events(em):
+    for k, cb in em._callbacks.copy().items():
+        em.event_detach(vlc.EventType(k))
+
+
+def vlc_state_to_mpris_state(state):
+    return {
+        vlc.State.Paused: PlaybackStatus.PAUSED,
+        vlc.State.Playing: PlaybackStatus.PLAYING
+    }.get(state, PlaybackStatus.STOPPED)
 
 # TODO signals
 
 
 class VLCBackend(Backend):
     def __init__(self, loop, provider):
+        Backend.__init__(self)
+
         self.loop = loop
         self.provider = provider
 
@@ -22,13 +36,67 @@ class VLCBackend(Backend):
 
         self._loop_status = LoopStatus.PLAYLIST
         self._shuffle = True
+        self._is_stopped = True
 
+        # in heisenbugs we trust
+        # we need to keep references of event managers
+        # or else shit will go down
+        self._vlc_player_event_manager = None
+        self._vlc_media_event_manger = None
+
+        # *NO* calls to vlc from callbacks!
+        self._vlc_player_event_manager = self.player.event_manager()
+        self._vlc_player_event_manager.event_attach(
+            vlc.EventType.MediaPlayerSeekableChanged,
+            lambda e: self.emit_notification('CanSeek', bool(e.u.new_seekable))
+        )
+        self._vlc_player_event_manager.event_attach(
+            vlc.EventType.MediaPlayerPausableChanged,
+            lambda e: self.emit_notification(
+                'CanPause', bool(e.u.new_pausable) or self._is_stopped
+            )
+        )
+        self._vlc_player_event_manager.event_attach(
+            vlc.EventType.MediaPlayerMediaChanged,
+            lambda e: self.emit_notification('Metadata', self.metadata())
+        )
+        self._vlc_player_event_manager.event_attach(
+            vlc.EventType.MediaPlayerStopped,
+            self.on_media_stopped,
+        )
+        self._vlc_player_event_manager.event_attach(
+            vlc.EventType.MediaPlayerEndReached,
+            self.on_media_end_reached
+        )
+
+        self.emit_notification('PlaybackStatus', PlaybackStatus.STOPPED)
+
+    # events
+    # do *NOT* make calls to vlc from callbacks!
+    def on_media_end_reached(self, event):
+        def advance():
+            if self.can_go_next():
+                self.next()
+
+        # we want advance to be called from the main thread
+        GObject.main_context_default().invoke_full(0, advance)
+
+        return False
+
+    def on_media_stopped(self, event):
+        self._is_stopped = True
+        self.emit_notification('PlaybackStatus', PlaybackStatus.STOPPED)
+        self.emit_notification('CanPlay', True)
+        self.emit_notification('CanPause', False)
+
+    # other stuff
     def can_quit(self):
         return True
 
     def fullscreen(self, arg=None):
         if arg is None:
-            return self.player.get_fullscreen() == 0
+            return self.player.get_fullscreen() == 1
+        self.emit_notification(self.fullscreen())
         return
 
     def can_set_fullscreen(self):
@@ -49,15 +117,13 @@ class VLCBackend(Backend):
 
     def playback_status(self):
         state = self.player.get_state()
-        return {
-            vlc.State.Paused: PlaybackStatus.PAUSED,
-            vlc.State.Playing: PlaybackStatus.PLAYING
-        }.get(state, PlaybackStatus.STOPPED)
+        return vlc_state_to_mpris_state(state)
 
     def loop_status(self, arg=None):
         if arg is None:
             return self._loop_status
         self._loop_status = LoopStatus(arg)
+        self.emit_notification('LoopStatus')
 
     def rate(self, arg=None):
         # TODO player.get_rate/set_rate
@@ -68,14 +134,18 @@ class VLCBackend(Backend):
         if arg is None:
             return self.provider.shuffle
         self.provider.shuffle = bool(arg)
+        self.emit_notification('Shuffle')
 
     def metadata(self):
+        if self.provider.current_song is None:
+            return Metadata()
         return self.provider.current_song.metadata
 
     def volume(self, arg=None):
         if arg is None:
             return max(min(self.player.audio_get_volume() / 100.0, 0), 1.0)
         self.player.audio_set_volume(min(max(0, arg*100.0), 100))
+        self.emit_notification('Volume')
 
     def position(self):
         return dbus.Int64(max(self.player.get_time()*1000, 0))
@@ -89,44 +159,55 @@ class VLCBackend(Backend):
         return 1.0
 
     def can_go_next(self):
-        # TODO
         return self.provider.can_go_next()
 
     def can_go_previous(self):
-        # TODO
         return self.provider.can_go_previous()
 
     def can_play(self):
-        return self.player.will_play() == 0
+        # return not (self.player.is_playing() == 1) or self._is_stopped
+        return self._is_stopped or self.player.will_play() == 1
 
     def can_pause(self):
-        return self.player.can_pause() == 0
+        # return self.player.is_playing() == 1
+        return self.player.can_pause() == 1 and self.player.is_playing() == 1
 
     def can_seek(self):
-        return self.player.is_seekable() == 0
+        return self.player.is_seekable() == 1
 
     def can_control(self):
         return True
 
     def next(self):
         song = self.provider.next()
-        self.player.set_mrl(song.uri)
+        self.open_uri(song.uri)
+        self.play()
 
     def previous(self):
         song = self.provider.previous()
-        self.player.set_mrl(song.uri)
+        self.open_uri(song.uri)
+        self.play()
 
     def pause(self):
         self.player.set_pause(1)
+        self._is_stopped = False
 
     def play_pause(self):
+        if self._is_stopped:
+            # explicitly play if stopped, or else vlc won't start playback
+            return self.play()
         self.player.pause()
+        self._is_stopped = False
 
     def stop(self):
         self.player.stop()
+        self._is_stopped = True
+        if self.provider.current_playlist is not None:
+            self.provider.activate_playlist(self.provider.current_playlist.id)
 
     def play(self):
         self.player.play()
+        self._is_stopped = False
 
     def seek(self, position):
         self.player.set_time(self.player.get_time() + position*100000)
@@ -136,8 +217,24 @@ class VLCBackend(Backend):
         self.player.set_time(position*100000)
 
     def open_uri(self, uri):
-        # TODO disallow?
-        self.player.set_mrl(uri)
+        if self._vlc_media_event_manger is not None:
+            _vlc_detach_all_events(self._vlc_media_event_manger)
+
+        self._is_stopped = True
+        media = self.player.set_mrl(uri)
+
+        em = media.event_manager()
+        em.event_attach(
+            vlc.EventType.MediaStateChanged,
+            lambda e: self.emit_notification(
+                'PlaybackStatus', vlc_state_to_mpris_state(e.u.new_status)
+            )
+        )
+        self._vlc_media_event_manger = em
+
+        self.emit_notification('CanGoNext')
+        self.emit_notification('CanGoPrevious')
+        self.emit_notification('Metadata')
 
     def playlist_count(self):
         return len(self.provider.playlists)
@@ -147,13 +244,15 @@ class VLCBackend(Backend):
         return [PlaylistOrdering.USER_DEFINED]
 
     def active_playlist(self):
-        return self.provider.playlist.dbus_playlist
+        return self.provider.current_playlist.dbus_playlist
 
     def activate_playlist(self, playlistid):
         self.provider.activate_playlist(playlistid)
-        self.player.set_mrl(self.provider.current_song.uri)
+        self.open_uri(self.provider.current_song.uri)
+        self.play()
 
     def get_playlists(self, index, max_count, order, reversed_):
+        # TODO args
         return self.provider.dbus_playlists
 
     def tracks(self):

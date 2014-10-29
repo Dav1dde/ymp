@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractclassmethod
-from collections.abc import Hashable
+from collections.abc import Hashable, Set
 from enum import Enum
 import dbus.service
 
@@ -14,7 +14,7 @@ def PropertyInterface(*INTERFACE_NAMES):
             if interface_name in INTERFACE_NAMES:
                 return self.get_property(interface_name, property_name)
 
-            raise dbus.exceptions.DBusException(
+            raise ValueError(
                 'The "{}" object does not implement the "{}" interface'
                 .format(self.__class__.__name__, interface_name)
             )
@@ -27,29 +27,29 @@ def PropertyInterface(*INTERFACE_NAMES):
             if interface_name in INTERFACE_NAMES:
                 return self.get_all_properties(interface_name)
 
-            raise dbus.exceptions.DBusException(
+            raise ValueError(
                 'The "{}" object does not implement the "{}" interface'
                 .format(self.__class__.__name__, interface_name)
             )
 
         @dbus.service.method(dbus.PROPERTIES_IFACE, in_signature='ssv')
         def Set(self, interface_name, property_name, new_value):
-            self.PropertiesChanged(
-                interface_name, {property_name: new_value}, []
+            if interface_name in INTERFACE_NAMES:
+                return self.set_property(interface_name, property_name, new_value)
+
+            raise ValueError(
+                'The "{}" object does not implement the "{}" interface'
+                .format(self.__class__.__name__, interface_name)
             )
 
         @dbus.service.signal(dbus.PROPERTIES_IFACE, signature='sa{sv}as')
         def PropertiesChanged(self, interface_name,
                               changed_properties, invalidated_properties):
-            if interface_name in INTERFACE_NAMES:
-                return self.properties_changed(
-                    interface_name, changed_properties, invalidated_properties
+            if interface_name not in INTERFACE_NAMES:
+                raise ValueError(
+                    'The "{}" object does not implement the "{}" interface'
+                    .format(self.__class__.__name__, interface_name)
                 )
-
-            raise dbus.exceptions.DBusException(
-                'The "{}" object does not implement the "{}" interface'
-                .format(self.__class__.__name__, interface_name)
-            )
 
         @abstractclassmethod
         def get_property(self, interface_name, property_name):
@@ -60,7 +60,7 @@ def PropertyInterface(*INTERFACE_NAMES):
             raise NotImplementedError()
 
         @abstractclassmethod
-        def properties_changed(self, interface_name, changed_properties, invalidated_properties):
+        def set_property(self, interface_name, property_name, value):
             raise NotImplementedError()
 
     return _PropertyInterface
@@ -80,7 +80,7 @@ class MySet(set):
         return default
 
 
-class PropertyList(object):
+class PropertyList(Set):
     def __init__(self):
         self.properties = MySet()
 
@@ -118,6 +118,15 @@ class PropertyList(object):
             if name not in self.properties:
                 raise KeyError('Property "{}" does not exist'.format(name))
             self.properties.get(name).valid = False
+
+    def __contains__(self, element):
+        return element in self.properties
+
+    def __iter__(self):
+        return iter(self.properties)
+
+    def __len__(self):
+        return len(self.properties)
 
 
 class Property(Hashable):

@@ -43,13 +43,20 @@ class MediaPlayer2(
         TracklistInterface.register_properties(self._properties, backend)
         PlaylistsInterface.register_properties(self._properties, backend)
 
+        self.backend.add_notification_callback(self.emit_notification)
+
+    def emit_notification(self, name, value):
+        for interface, proplist in self._properties.items():
+            if name in proplist:
+                return self.PropertiesChanged(interface, {name: value}, [])
+
+        raise ValueError('property "{}" doesn\'t exist'.format(name))
+
     def get_property(self, interface, property_name):
         return self._properties[interface].get_property(property_name)
 
     def get_all_properties(self, interface):
         return self._properties[interface].get_all_properties()
 
-    def properties_changed(self, interface, changed_properties, invalidated_properties):
-        self._properties[interface].properties_changed(
-            changed_properties, invalidated_properties
-        )
+    def set_property(self, interface, property_name, value):
+        self._properties[interface].set_property(property_name, value)

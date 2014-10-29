@@ -35,20 +35,23 @@ class PlayerInterface(dbus.service.Object):
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Next(self):
-        self.backend.next()
+        if self.backend.can_go_next():
+            self.backend.next()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Previous(self):
-        self.backend.previous()
+        if self.backend.can_go_previous():
+            self.backend.previous()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Pause(self):
-        self.backend.pause()
+        if self.backend.can_pause():
+            self.backend.pause()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def PlayPause(self):
-        # TODO check CanPlay
-        self.backend.play_pause()
+        if self.backend.can_play() or self.backend.can_pause():
+            self.backend.play_pause()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Stop(self):
@@ -56,20 +59,18 @@ class PlayerInterface(dbus.service.Object):
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player')
     def Play(self):
-        # TODO check CanPlay
-        self.backend.play()
+        if self.backend.can_play():
+            self.backend.play()
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player', in_signature='x')
     def Seek(self, offset):
-        # TODO check CanSeek
-        self.backend.seek(offset)
+        if self.backend.can_seek():
+            self.backend.seek(offset)
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player', in_signature='ox')
     def SetPosition(self, trackid, position):
-        # TODO check if trackid matches current trackid
-        if position < 0:
-            return
-        self.backend.set_position(trackid, position)
+        if position >= 0:
+            self.backend.set_position(trackid, position)
 
     @dbus.service.method('org.mpris.MediaPlayer2.Player', in_signature='s')
     def OpenUri(self, uri):

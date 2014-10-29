@@ -42,7 +42,7 @@ class Playlist(object):
         self.icon = icon
         self.id = id
         if self.id is None:
-            self.id = '{}_{}'.format(self.PLAYLISTS+1, name)
+            self.id = '{}_{}'.format(name, self.PLAYLISTS+1)
             self.PLAYLISTS += 1
 
         if not self.id.startswith('/'):
@@ -100,7 +100,7 @@ class Playlist(object):
             raise StopIteration('playlist reached the end')
 
         self._current = (self._current + 1) % len(self._songs)
-        self._songs[self._current]
+        return self._songs[self._current]
 
     def can_go_previous(self):
         return self.endless or self._current > 0

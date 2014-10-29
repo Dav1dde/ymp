@@ -1,8 +1,8 @@
 
 
 class Playlist(tuple):
-    def __init__(self, pid, name, icon):
-        tuple.__init__(self, (pid, name, icon))
+    def __new__(cls, *args):
+        return super(Playlist, cls).__new__(cls, args)
 
     @property
     def id(self):
@@ -18,8 +18,10 @@ class Playlist(tuple):
 
 
 class MaybePlaylist(tuple):
-    def __init__(self, valid, pid, name, icon):
-        tuple.__init__(self, (valid, Playlist(pid, name, icon)))
+    def __new__(cls, valid, pid, name, icon):
+        return super(MaybePlaylist, cls).__new__(
+            cls, (valid, Playlist(pid, name, icon))
+        )
 
     @property
     def valid(self):
