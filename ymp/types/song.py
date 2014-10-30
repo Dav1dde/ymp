@@ -67,7 +67,7 @@ class Song(object):
 
 class PafySong(Song):
     def __init__(self, pafy):
-        Song.__init__(self, None, pafy.videoid)
+        Song.__init__(self, None, pafy.videoid.replace('-', '_'))
 
         self.pafy = pafy
 

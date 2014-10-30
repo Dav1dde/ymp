@@ -79,6 +79,11 @@ class VLCBackend(Backend):
 
         self.emit_notification('PlaybackStatus', PlaybackStatus.STOPPED)
 
+        # this sucks but there are no events for a change of volume
+        # e.g. changed through pulseaudio
+        self._old_volume = -2
+        GObject.timeout_add(1000, self._poll_volume)
+
     # events
     # do *NOT* make calls to vlc from callbacks!
     def on_media_end_reached(self, event):
@@ -97,6 +102,13 @@ class VLCBackend(Backend):
 
         self.emit_notification('CanPlay', self._has_media)
         self.emit_notification('CanPause', False)
+
+    def _poll_volume(self):
+        vol = self.volume()
+        if self._has_media and not vol == self._old_volume:
+            self.emit_notification('Volume', vol)
+
+        return True
 
     # other stuff
     def can_quit(self):
@@ -151,8 +163,8 @@ class VLCBackend(Backend):
 
     def volume(self, arg=None):
         if arg is None:
-            return max(min(self.player.audio_get_volume() / 100.0, 0), 1.0)
-        self.player.audio_set_volume(min(max(0, arg*100.0), 100))
+            return float(min(max(0, self.player.audio_get_volume() / 100.0), 1.0))
+        self.player.audio_set_volume(int(min(max(0, arg*100.0), 100)))
         self.emit_notification('Volume')
 
     def position(self):
@@ -249,6 +261,7 @@ class VLCBackend(Backend):
                 'PlaybackStatus', vlc_state_to_mpris_state(e.u.new_status)
             )
         )
+
         self._vlc_media_event_manger = em
 
         self.emit_notification('CanPlay')
