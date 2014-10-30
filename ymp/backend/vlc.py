@@ -23,13 +23,17 @@ def vlc_state_to_mpris_state(state):
 
 
 class VLCBackend(Backend):
-    def __init__(self, loop, provider):
+    def __init__(self, loop, provider, options=''):
         Backend.__init__(self)
 
         self.loop = loop
         self.provider = provider
 
-        self.instance = vlc.Instance('--no-video')
+        self.options = options
+        if '--no-video' not in self.options:
+            self.options = '--no-video {}'.format(self.options.strip())
+
+        self.instance = vlc.Instance(self.options)
         self.player = self.instance.media_player_new()
 
         self._loop_status = LoopStatus.PLAYLIST

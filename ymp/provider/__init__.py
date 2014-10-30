@@ -1,12 +1,19 @@
 import operator
 
 from ymp.types.playlist import Playlist, DummyPlaylist
+from ymp.provider.youtube import YoutubeProvider
 from ymp.types.song import Song
 
 
+# TODO automatically gather all providers?
+PROVIDER = [YoutubeProvider]
+
+
 class SongProvider(object):
-    def __init__(self):
-        self.provider = list()
+    def __init__(self, provider=None):
+        self.provider = provider
+        if provider is None:
+            self.provider = [p() for p in PROVIDER]
 
         self.playlists = dict()
         self._active = None
@@ -20,6 +27,10 @@ class SongProvider(object):
             if provider.responsible_for(playlist):
                 p = provider.load(playlist)
                 self.playlists[p.id] = p
+                continue
+            raise ValueError(
+                'No provider found for playlist "{}"'.format(playlist)
+            )
 
     def load_from_file(self, path):
         with open(path) as f:
