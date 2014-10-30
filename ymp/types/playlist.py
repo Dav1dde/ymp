@@ -1,37 +1,6 @@
 import random
 
 from ymp.dbus.types.playlist import Playlist as DBusPlaylist
-from ymp.types.song import Song
-
-
-class DummyPlaylist(object):
-    PLAYLISTS = 0
-
-    def __init__(self):
-        self.name = ''
-        self.icon = ''
-        self.id = ''
-
-        self.endless = False
-
-        self.songs = list()
-
-        self.shuffle = False
-
-    def reset(self):
-        pass
-
-    def can_go_next(self):
-        return False
-
-    def next(self):
-        return Song('')
-
-    def can_go_previous(self):
-        return False
-
-    def previous(self):
-        return Song('')
 
 
 class Playlist(object):

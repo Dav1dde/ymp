@@ -1,24 +1,38 @@
 from locale import getpreferredencoding
 from subprocess import Popen, PIPE
 from urllib.parse import urlparse
+import pafy
 import json
 import re
 
+from ymp.types.song import Song, PafySong, TITLE_REGEX
 from ymp.types.playlist import Playlist
-from ymp.types.song import Song
 
 
-class YoutubeProvider(object):
-    TITLE_REGEX = [
-        re.compile('(?P<artist>[^-]*)\s*-\s*(?P<title>.*)')
-    ]
-
-    def __init__(self, youtube_dl='youtube-dl'):
-        self.youtube_dl = youtube_dl
-
+class _YoutubeProviderBase(object):
     def responsible_for(self, uri):
         o = urlparse(uri)
         return o.scheme in ('http', 'https') and 'youtube' in o.netloc
+
+
+class YoutubeProviderPafy(_YoutubeProviderBase):
+    def __init__(self):
+        pass
+
+    def load(self, playlist):
+        p = pafy.get_playlist(playlist, basic=False)
+
+        playlist = Playlist(p['title'])
+
+        for item in p['items']:
+            playlist.add(PafySong(item['pafy']))
+
+        return playlist
+
+
+class YoutubeProviderYoutubeDL(_YoutubeProviderBase):
+    def __init__(self, youtube_dl='youtube-dl'):
+        self.youtube_dl = youtube_dl
 
     def load(self, playlist):
         p = Popen(
@@ -48,7 +62,7 @@ class YoutubeProvider(object):
 
         title = j.get('fulltitle', j['title']).strip()
 
-        for r in self.TITLE_REGEX:
+        for r in TITLE_REGEX:
             m = r.match(title)
             if m:
                 j.update(m.groupdict({'title': title}))
@@ -61,3 +75,6 @@ class YoutubeProvider(object):
         j['length'] = j.pop('duration')*1000000
 
         return Song(uri, j.pop('id').replace('-', '_'), **j)
+
+
+YoutubeProvider = YoutubeProviderPafy

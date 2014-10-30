@@ -1,7 +1,7 @@
 import operator
 
-from ymp.types.playlist import Playlist, DummyPlaylist
 from ymp.provider.youtube import YoutubeProvider
+from ymp.types.playlist import Playlist
 from ymp.types.song import Song
 
 

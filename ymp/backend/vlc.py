@@ -10,6 +10,10 @@ from gi.repository import GObject
 import dbus
 
 
+# TODO:
+#  * trigger song url download for every next song asynchronously
+#  * maybe figure out why seeking backwards doesn't work in mp4 audio streams
+
 def _vlc_detach_all_events(em):
     for k, cb in em._callbacks.copy().items():
         em.event_detach(vlc.EventType(k))
@@ -213,7 +217,6 @@ class VLCBackend(Backend):
         self._is_stopped = False
 
     def seek(self, position):
-        # TODO fix seeking backwards, somehow doesn't work
         new_pos = max(self.player.get_time() + int(position/1000), 0)
         if new_pos > self.player.get_length():
             return self.next()
@@ -222,7 +225,6 @@ class VLCBackend(Backend):
         self.emit_event('seeked')
 
     def set_position(self, trackid, position):
-        # TODO fix seeking backwards, somehow doesn't work
         position = int(position/1000)
         if position < 0 or position > self.player.get_length():
             return
