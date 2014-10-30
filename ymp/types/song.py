@@ -83,6 +83,7 @@ class PafySong(Song):
         data = {
             'title': self.pafy.title,
             'user_rating': self.pafy.rating,
+            # TODO: safe to disc
             'art_uri': self.pafy.bigthumbhd or self.pafy.bigthumb,
             # pafy.length in seconds, length in microseconds
             'length': self.pafy.length*1000000
