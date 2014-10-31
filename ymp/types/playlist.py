@@ -8,7 +8,7 @@ from ymp.utility import dbus_path
 class Playlist(object):
     PLAYLISTS = 0
 
-    def __init__(self, name, icon='', id=None, endless=False):
+    def __init__(self, name, icon='', id=None, repeat=False):
         self.name = name
         self.icon = icon
         self.id = id
@@ -18,7 +18,7 @@ class Playlist(object):
 
         self.id = dbus_path(self.id)
 
-        self.endless = endless
+        self.repeat = repeat
 
         self.songs = list()
         self._songs = list()
@@ -63,7 +63,7 @@ class Playlist(object):
 
     @property
     def has_next(self):
-        return self.endless or (self._current+1) < len(self._songs)
+        return self.repeat or (self._current+1) < len(self._songs)
 
     def play_next(self):
         if not self.has_next:
@@ -82,7 +82,7 @@ class Playlist(object):
 
     @property
     def has_previous(self):
-        return self.endless or self._current > 0
+        return self.repeat or self._current > 0
 
     def play_previous(self):
         if not self.has_previous:
