@@ -37,8 +37,9 @@ class Song(object):
 
             self._metadata[key] = v
 
-    # might be called, soon before this song is played
-    # but this must not necessarily happen
+    # might be called soon before this song is played
+    # the song might not be played, or this method
+    # isn't called at all, even if the song will be played.
     def update(self):
         pass
 
@@ -77,7 +78,10 @@ class PafySong(Song):
 
     # we want to load data lazily
     def _update_once(self):
-        if self._metadata:
+        # if the pafy object has already fetched data once
+        # that is enough, since this method does not care
+        # about the actual media url, see `update` for more
+        if self.pafy._have_basic:
             return
 
         # we don't need to force it via pafy._have_basic = False

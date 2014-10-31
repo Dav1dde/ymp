@@ -210,6 +210,10 @@ class VLCBackend(Backend):
         song = self.provider.play_previous()
         self.open_uri(song.uri)
         self.play()
+        if self.provider.has_previous:
+            # if player runs in endless/repeat mode
+            # the last song is maybe not loaded
+            self.provider.previous.update()
 
     def pause(self):
         self.player.set_pause(1)
@@ -290,6 +294,8 @@ class VLCBackend(Backend):
         self.play()
         if self.provider.has_next:
             self.provider.next.update()
+        if self.provider.has_previous:
+            self.provider.previous.update()
 
     def get_playlists(self, index, max_count, order, reversed_):
         return self.provider.dbus_playlists  # TODO args
