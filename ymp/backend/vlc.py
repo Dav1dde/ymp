@@ -177,10 +177,10 @@ class VLCBackend(Backend):
         return 1.0  # TODO
 
     def can_go_next(self):
-        return self.provider.can_go_next()
+        return self.provider.has_next
 
     def can_go_previous(self):
-        return self.provider.can_go_previous()
+        return self.provider.has_previous
 
     def can_play(self):
         if self._is_stopped and self._has_media:
@@ -198,12 +198,12 @@ class VLCBackend(Backend):
         return True
 
     def next(self):
-        song = self.provider.next()
+        song = self.provider.play_next()
         self.open_uri(song.uri)
         self.play()
 
     def previous(self):
-        song = self.provider.previous()
+        song = self.provider.play_previous()
         self.open_uri(song.uri)
         self.play()
 

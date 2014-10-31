@@ -70,14 +70,24 @@ class SongProvider(object):
         if self._active is not None:
             self._active.shuffle = value
 
-    def can_go_next(self):
-        return self._active is not None and self._active.can_go_next()
+    @property
+    def has_next(self):
+        return self._active is not None and self._active.has_next
 
+    def play_next(self):
+        return self._active.play_next()
+
+    @property
     def next(self):
-        return self._active.next()
+        return self._active.next
 
-    def can_go_previous(self):
-        return self._active is not None and self._active.can_go_previous()
+    @property
+    def has_previous(self):
+        return self._active is not None and self._active.has_previous
 
+    def play_previous(self):
+        return self._active.play_previous()
+
+    @property
     def previous(self):
-        return self._active.previous()
+        return self._active.previous

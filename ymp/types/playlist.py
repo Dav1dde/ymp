@@ -1,6 +1,7 @@
 import random
 
 from ymp.dbus.types.playlist import Playlist as DBusPlaylist
+from ymp.exception import YmpPlaylistException
 from ymp.utility import dbus_path
 
 
@@ -60,23 +61,40 @@ class Playlist(object):
     def current_song(self):
         return self._songs[self._current]
 
-    def can_go_next(self):
+    @property
+    def has_next(self):
         return self.endless or (self._current+1) < len(self._songs)
 
-    def next(self):
-        if not self.can_go_next():
-            # TODO maybe better exception ...
-            raise StopIteration('playlist reached the end')
+    def play_next(self):
+        if not self.has_next:
+            raise YmpPlaylistException('playlist reached the end')
 
         self._current = (self._current + 1) % len(self._songs)
         return self._songs[self._current]
 
-    def can_go_previous(self):
+    @property
+    def next(self):
+        if not self.has_next:
+            raise YmpPlaylistException('playlist has no next song')
+
+        next = (self._current + 1) % len(self._songs)
+        return self._songs[next]
+
+    @property
+    def has_previous(self):
         return self.endless or self._current > 0
 
-    def previous(self):
-        if not self.can_go_previous():
-            raise StopIteration('can\'t go to previous song')
+    def play_previous(self):
+        if not self.has_previous:
+            raise YmpPlaylistException('can\'t go to previous song')
 
         self._current = (self._current - 1) % len(self._songs)
         return self.songs[self._current]
+
+    @property
+    def previous(self):
+        if not self.has_previous:
+            raise YmpPlaylistException('playlist has no previous song')
+
+        previous = (self._current - 1) % len(self._songs)
+        return self._songs[previous]
