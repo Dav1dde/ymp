@@ -4,6 +4,7 @@ import time
 import re
 
 from ymp.dbus.types.metadata import Metadata
+from ymp.utility import dbus_path
 
 
 TITLE_REGEX = [
@@ -18,9 +19,7 @@ class Song(object):
 
     def __init__(self, uri, id, **kwargs):
         self._uri = uri
-        self._id = id
-        if not self.id.startswith('/'):
-            self._id = '/{}'.format(self._id)
+        self._id = dbus_path(id)
 
         self._metadata = dict()
         if kwargs:
@@ -67,7 +66,7 @@ class Song(object):
 
 class PafySong(Song):
     def __init__(self, pafy):
-        Song.__init__(self, None, pafy.videoid.replace('-', '_'))
+        Song.__init__(self, None, pafy.videoid)
 
         self.pafy = pafy
 

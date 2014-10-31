@@ -1,6 +1,7 @@
 import random
 
 from ymp.dbus.types.playlist import Playlist as DBusPlaylist
+from ymp.utility import dbus_path
 
 
 class Playlist(object):
@@ -14,8 +15,7 @@ class Playlist(object):
             self.id = '{}_{}'.format(name, self.PLAYLISTS+1)
             self.PLAYLISTS += 1
 
-        if not self.id.startswith('/'):
-            self.id = '/{}'.format(self.id)
+        self.id = dbus_path(self.id)
 
         self.endless = endless
 
