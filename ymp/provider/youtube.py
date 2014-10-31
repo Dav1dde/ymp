@@ -1,12 +1,12 @@
 from locale import getpreferredencoding
 from subprocess import Popen, PIPE
 from urllib.parse import urlparse
-import pafy
 import json
 import re
 
 from ymp.types.song import Song, PafySong, TITLE_REGEX
 from ymp.types.playlist import Playlist
+from ymp.lib import pafy
 
 
 class _YoutubeProviderBase(object):
