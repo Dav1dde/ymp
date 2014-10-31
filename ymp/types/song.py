@@ -37,6 +37,11 @@ class Song(object):
 
             self._metadata[key] = v
 
+    # might be called, soon before this song is played
+    # but this must not necessarily happen
+    def update(self):
+        pass
+
     @property
     def uri(self):
         return self._uri
@@ -82,7 +87,7 @@ class PafySong(Song):
         data = {
             'title': self.pafy.title,
             'user_rating': self.pafy.rating,
-            # TODO: safe to disc
+            # TODO maybe safe to disc
             'art_url': self.pafy.thumb,
             # pafy.length in seconds, length in microseconds
             'length': self.pafy.length*1000000
@@ -97,18 +102,22 @@ class PafySong(Song):
 
         self.set_metadata(**data)
 
-    @property
-    def uri(self):
-        # we need to update for expiry
+    def update(self):
+        # TODO maybe make this async, threads?
+        # we need to update for expiry at least once
         self._update_once()
 
         now = time.time()
 
         # expires in 10 minutes
         if self.pafy.expiry - now < 600:
+            # definitly update!
             self.pafy._have_basic = False
             self.pafy.fetch_basic()
 
+    @property
+    def uri(self):
+        self.update()
         # there is getbestaudio()
         # but for some reason seeking back in a pure audio m4a
         # doesn't seem to work in vlc
@@ -124,4 +133,5 @@ class PafySong(Song):
         # we need to set metadata right here
         self._update_once()
         return super().metadata
+
 

@@ -201,6 +201,10 @@ class VLCBackend(Backend):
         song = self.provider.play_next()
         self.open_uri(song.uri)
         self.play()
+        if self.provider.has_next:
+            # update the next song, fetch metadata like urls etc.
+            # it is soon the be played
+            self.provider.next.update()
 
     def previous(self):
         song = self.provider.play_previous()
@@ -284,6 +288,8 @@ class VLCBackend(Backend):
         self.provider.activate_playlist(playlistid)
         self.open_uri(self.provider.current_song.uri)
         self.play()
+        if self.provider.has_next:
+            self.provider.next.update()
 
     def get_playlists(self, index, max_count, order, reversed_):
         return self.provider.dbus_playlists  # TODO args
