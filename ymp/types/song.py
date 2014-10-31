@@ -83,7 +83,7 @@ class PafySong(Song):
             'title': self.pafy.title,
             'user_rating': self.pafy.rating,
             # TODO: safe to disc
-            'art_uri': self.pafy.bigthumbhd or self.pafy.bigthumb,
+            'art_url': self.pafy.thumb,
             # pafy.length in seconds, length in microseconds
             'length': self.pafy.length*1000000
         }
@@ -107,9 +107,10 @@ class PafySong(Song):
         # expires in 10 minutes
         if self.pafy.expiry - now < 600:
             self.pafy._have_basic = False
+            self.pafy.fetch_basic()
 
         # there is getbestaudio()
-        # but for some reason seeking back in a pure audio mp4
+        # but for some reason seeking back in a pure audio m4a
         # doesn't seem to work in vlc
         return self.pafy.getbest().url
 

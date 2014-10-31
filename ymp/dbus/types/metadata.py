@@ -2,7 +2,7 @@ import dbus
 
 
 class Metadata(dbus.Dictionary):
-    ART_URI = 'mpris:artUrl'
+    ART_URL = 'mpris:artUrl'
     TRACKID = 'mpris:trackid'
     LENGTH = 'mpris:length'
     ALBUM = 'xesam:album'
