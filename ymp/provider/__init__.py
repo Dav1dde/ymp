@@ -18,6 +18,7 @@ class SongProvider(object):
         self.playlists = dict()
         self._active = None
         self._shuffle = False
+        self._repeat = False
 
     def register_provider(self, provider):
         self.provider.append(provider)
@@ -47,6 +48,7 @@ class SongProvider(object):
         self._active = self.playlists[pid]
         self._active.reset()
         self._active.shuffle = self._shuffle
+        self._active.repeat = self._repeat
 
     @property
     def current_playlist(self):
@@ -69,6 +71,16 @@ class SongProvider(object):
         self._shuffle = value
         if self._active is not None:
             self._active.shuffle = value
+
+    @property
+    def repeat(self):
+        return self._repeat
+
+    @repeat.setter
+    def repeat(self, value):
+        self._repeat = value
+        if self._active is not None:
+            self._active.repeat = value
 
     @property
     def has_next(self):

@@ -37,11 +37,8 @@ class Playlist(object):
     @shuffle.setter
     def shuffle(self, value):
         if not value == self._shuffle:
+            self._shuffle = value
             self.reset()
-            if value:
-                random.shuffle(self._songs)
-
-        self._shuffle = value
 
     def add(self, song, index=None):
         index = len(self.songs) if index is None else index
@@ -56,6 +53,8 @@ class Playlist(object):
     def reset(self):
         self._current = 0
         self._songs = list(self.songs)
+        if self._shuffle:
+            random.shuffle(self._songs)
 
     @property
     def current_song(self):

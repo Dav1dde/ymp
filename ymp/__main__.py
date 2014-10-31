@@ -50,6 +50,16 @@ def main():
     )
 
     parser.add_argument(
+        '-s', '--shuffle', dest='shuffle', action='store_true',
+        help='Shuffle songs of a playlist'
+    )
+
+    parser.add_argument(
+        '-r', '--repeat', dest='repeat', action='store_true',
+        help='Play playlists on repeat'
+    )
+
+    parser.add_argument(
         '--backend', dest='backend', type=_backend,
         help='Sound backend for playing music. Currently only supports VLC'
     )
@@ -66,6 +76,9 @@ def main():
     DBusGMainLoop(set_as_default=True)
 
     pp = SongProvider()
+    pp.shuffle = ns.shuffle
+    pp.repeat = ns.repeat
+
     playlists = set(map(str.strip, ns.playlist))
     for line in ns.pf or []:
         playlists.add(line.strip())
