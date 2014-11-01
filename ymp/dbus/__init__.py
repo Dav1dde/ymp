@@ -44,7 +44,7 @@ class MediaPlayer2(
         PlaylistsInterface.register_properties(self._properties, backend)
 
         self.backend.add_event_callback(
-            'seeked', lambda: self.Seeked(self.backend.position())
+            'seeked', lambda position: self.Seeked(dbus.Int64(position))
         )
         self.backend.add_notification_callback(self.emit_notification)
 

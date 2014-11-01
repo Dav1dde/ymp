@@ -8,3 +8,8 @@ def dbus_path(*args):
     s = '/'.join(a.strip('/') for a in args if a.strip('/'))
     s = _DBUS_PATH_RE.sub('_', s)
     return '/{}'.format(s)
+
+
+def enforce(pred, exc):
+    if not pred:
+        raise exc

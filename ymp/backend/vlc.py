@@ -3,7 +3,9 @@ from ymp.dbus.types.ordering import PlaylistOrdering
 from ymp.dbus.types.playback import PlaybackStatus
 from ymp.dbus.types.metadata import Metadata
 from ymp.dbus.types.loop import LoopStatus
+from ymp.types.song import Song
 from ymp.backend import Backend
+from ymp.utility import enforce
 from ymp.lib import vlc
 
 from gi.repository import GObject
@@ -45,6 +47,7 @@ class VLCBackend(Backend):
 
         self._is_stopped = True
         self._has_media = False
+        self._update_seek = False
 
         # in heisenbugs we trust
         # we need to keep references of event managers
@@ -95,6 +98,15 @@ class VLCBackend(Backend):
         GObject.main_context_default().invoke_full(0, advance)
 
         return False
+
+    def on_media_state_changed(self, event):
+        self.emit_notification(
+            'PlaybackStatus', vlc_state_to_mpris_state(event.u.new_status)
+        )
+
+        if event.u.new_status == vlc.State.Playing and self._update_seek:
+            self.emit_event('seeked', self._update_seek)
+            self._update_seek = None
 
     def on_media_stopped(self, event):
         self._is_stopped = True
@@ -199,21 +211,15 @@ class VLCBackend(Backend):
 
     def next(self):
         song = self.provider.play_next()
-        self.open_uri(song.uri)
-        self.play()
-        if self.provider.has_next:
-            # update the next song, fetch metadata like urls etc.
-            # it is soon the be played
-            self.provider.next.update()
+        # update the next song, fetch metadata like urls etc.
+        # it is soon the be played (next=True)
+        self.play_song(song, play=True, next=True)
 
     def previous(self):
         song = self.provider.play_previous()
-        self.open_uri(song.uri)
-        self.play()
-        if self.provider.has_previous:
-            # if player runs in endless/repeat mode
-            # the last song is maybe not loaded
-            self.provider.previous.update()
+        # if player runs in endless/repeat mode
+        # the last song is maybe not loaded
+        self.play_song(song, play=True, previous=True)
 
     def pause(self):
         self.player.set_pause(1)
@@ -242,7 +248,7 @@ class VLCBackend(Backend):
             return self.next()
 
         self.player.set_time(new_pos)
-        self.emit_event('seeked')
+        self.emit_event('seeked', self.position())
 
     def set_position(self, trackid, position):
         position = int(position/1000)
@@ -251,7 +257,25 @@ class VLCBackend(Backend):
 
         if trackid == self.provider.current_song.id and self.can_seek():
             self.player.set_time(position)
-            self.emit_event('seeked')
+            self.emit_event('seeked', self.position())
+
+    def play_song(self, song, play=True, next=False, previous=False):
+        media = self.open_uri(song.uri)
+
+        if song.start:
+            media.add_option('start-time={:.3f}'.format(song.start))
+            self._update_seek = song.start*1000000
+
+        if song.end:
+            media.add_option('stop-time={:.3f}'.format(song.end))
+
+        if play:
+            self.player.play()
+
+        if next and self.provider.has_next:
+            self.provider.next.update()
+        if previous and self.provider.has_previous:
+            self.provider.previous.update()
 
     def open_uri(self, uri):
         if self._vlc_media_event_manger is not None:
@@ -265,9 +289,7 @@ class VLCBackend(Backend):
         em = media.event_manager()
         em.event_attach(
             vlc.EventType.MediaStateChanged,
-            lambda e: self.emit_notification(
-                'PlaybackStatus', vlc_state_to_mpris_state(e.u.new_status)
-            )
+            self.on_media_state_changed
         )
 
         self._vlc_media_event_manger = em
@@ -277,6 +299,8 @@ class VLCBackend(Backend):
         self.emit_notification('CanGoNext')
         self.emit_notification('CanGoPrevious')
         self.emit_notification('Metadata')
+
+        return media
 
     def playlist_count(self):
         return len(self.provider.playlists)
@@ -290,12 +314,9 @@ class VLCBackend(Backend):
 
     def activate_playlist(self, playlistid):
         self.provider.activate_playlist(playlistid)
-        self.open_uri(self.provider.current_song.uri)
-        self.play()
-        if self.provider.has_next:
-            self.provider.next.update()
-        if self.provider.has_previous:
-            self.provider.previous.update()
+        self.play_song(
+            self.provider.current_song, play=True, next=True, previous=True
+        )
 
     def get_playlists(self, index, max_count, order, reversed_):
         return self.provider.dbus_playlists  # TODO args

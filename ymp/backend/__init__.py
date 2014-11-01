@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractclassmethod
 from collections import defaultdict
+import inspect
 import re
 
 
@@ -35,9 +36,15 @@ class Backend(object, metaclass=ABCMeta):
     def remove_event_callback(self, name, cb):
         self._events[name].remove(cb)
 
-    def emit_event(self, name):
+    def emit_event(self, name, *args, **kwargs):
         for cb in self._events[name]:
-            cb()
+            if inspect.getargspec(cb).args:
+                # this callback takes arguments, so give it all
+                # don't check how much it takes etc. just if it does
+                # don't wanna make shit too complicated
+                cb(*args, **kwargs)
+            else:
+                cb()
 
     @abstractclassmethod
     def can_quit(self):

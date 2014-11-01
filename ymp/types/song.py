@@ -21,6 +21,9 @@ class Song(object):
         self._uri = uri
         self._id = dbus_path(id)
 
+        self.start = None
+        self.end = None
+
         self._metadata = dict()
         if kwargs:
             self.set_metadata(**kwargs)
@@ -75,6 +78,8 @@ class PafySong(Song):
         Song.__init__(self, None, pafy.videoid)
 
         self.pafy = pafy
+        self.start = pafy.playlist_meta['start']
+        self.end = pafy.playlist_meta['end']
 
     # we want to load data lazily
     def _update_once(self):
