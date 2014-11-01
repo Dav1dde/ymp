@@ -13,8 +13,10 @@ import dbus
 
 
 # TODO:
-#  * trigger song url download for every next song asynchronously
-#  * maybe figure out why seeking backwards doesn't work in mp4 audio streams
+#  * find out why stream breaks after pausing too long | stream 1 partial file
+#    or fix it by detecting it and restarting at last position???
+#  * maybe download song information async (but fix this in PafySong)
+#  * maybe figure out why seeking backwards doesn't work in m4a audio streams
 
 def _vlc_detach_all_events(em):
     for k, cb in em._callbacks.copy().items():
@@ -120,6 +122,8 @@ class VLCBackend(Backend):
         if self._has_media and not vol == self._old_volume:
             self.emit_notification('Volume', vol)
 
+        # TODO make a way to quit the backend and
+        # return False here to remove it from GObject loop
         return True
 
     # other stuff
@@ -307,6 +311,7 @@ class VLCBackend(Backend):
 
     def orderings(self):
         # we take it as we get it from youtube/grooveshark, whatever
+        # maybe needs to be changed later on
         return [PlaylistOrdering.USER_DEFINED]
 
     def active_playlist(self):

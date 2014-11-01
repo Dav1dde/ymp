@@ -21,8 +21,8 @@ class Song(object):
         self._uri = uri
         self._id = dbus_path(id)
 
-        self.start = None
-        self.end = None
+        self.start = None  # start audio from position (seconds)
+        self.end = None  # stop audio at position (seconds)
 
         self._metadata = dict()
         if kwargs:

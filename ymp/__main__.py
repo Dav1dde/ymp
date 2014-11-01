@@ -4,7 +4,8 @@ Yolo Media Player or Youtube Media Player
 This media player currently supports Youtube playlists and
 exports a Mpris2 interface to control it.
 
-Recommended gnome plugin: https://extensions.gnome.org/extension/55/media-player-indicator/
+Recommended gnome plugin:
+https://extensions.gnome.org/extension/55/media-player-indicator/
 
 Future features:
   * Grooveshark
