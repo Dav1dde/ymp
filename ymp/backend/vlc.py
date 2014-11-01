@@ -51,6 +51,15 @@ class VLCBackend(Backend):
         self._has_media = False
         self._update_seek = False
 
+        # this sucks but there are no events for a change of volume
+        # e.g. changed through pulseaudio
+        self._old_volume = -2
+        GObject.timeout_add(1000, self._poll_volume)
+
+        # used for cleanup stuff, for now only to stop the
+        # GObject timeout
+        self._stop = False
+
         # in heisenbugs we trust
         # we need to keep references of event managers
         # or else shit will go down
@@ -83,11 +92,6 @@ class VLCBackend(Backend):
         )
 
         self.emit_notification('PlaybackStatus', PlaybackStatus.STOPPED)
-
-        # this sucks but there are no events for a change of volume
-        # e.g. changed through pulseaudio
-        self._old_volume = -2
-        GObject.timeout_add(1000, self._poll_volume)
 
     # events
     # do *NOT* make calls to vlc from callbacks!
@@ -122,9 +126,7 @@ class VLCBackend(Backend):
         if self._has_media and not vol == self._old_volume:
             self.emit_notification('Volume', vol)
 
-        # TODO make a way to quit the backend and
-        # return False here to remove it from GObject loop
-        return True
+        return not self._stop
 
     # other stuff
     def can_quit(self):
@@ -146,6 +148,10 @@ class VLCBackend(Backend):
         pass
 
     def quit(self):
+        self._stop = True
+        # TODO move that out of here, should not depend on loop
+        # maybe event? emit_event('stop') or smthing
+        # also proper shutdown, kill vlc.Instance, is that possible?
         self.loop.quit()
 
     def has_track_list(self):
