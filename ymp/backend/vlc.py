@@ -42,11 +42,11 @@ class VLCBackend(Backend):
             self.options = '--no-video {}'.format(self.options.strip())
 
         self.instance = vlc.Instance(self.options)
-        self.player = self.instance.media_player_new()
-
-        # I think setting the icon is bugged in libvlc
+        # icon is fixed in 2.2.0 of vlc
         self.instance.set_app_id('de.dav1d.ymp', '0.3', 'ymp')
         self.instance.set_user_agent('Ymp', 'Ymp/0.3 Python/3')
+
+        self.player = self.instance.media_player_new()
 
         self._loop_status = LoopStatus.PLAYLIST
         self._shuffle = True
