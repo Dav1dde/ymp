@@ -1,3 +1,4 @@
+from urllib.parse import quote_plus
 import dbus.service
 import dbus
 import time
@@ -70,7 +71,9 @@ class Song(object):
     @property
     def metadata(self):
         m = Metadata(self._metadata)
-        m[Metadata.URL] = self.user_uri
+        uu = self.user_uri
+        if uu:
+            m[Metadata.URL] = uu
         m[Metadata.TRACKID] = dbus.service.ObjectPath(self.id)
         if Metadata.LENGTH in m:
             m[Metadata.LENGTH] = dbus.Int64(m[Metadata.LENGTH])
@@ -182,3 +185,30 @@ class SoundCloudSong(Song):
     @property
     def user_uri(self):
         return self.track['permalink_url']
+
+
+class GroovesharkSong(Song):
+    def __init__(self, song):
+        Song.__init__(
+            self, None, song.id, title=song.name, artist=song.artist.name,
+            album=song.album.name, art_url=song._cover_url
+        )
+        # TODO include length/song.duration
+
+        self.song = song
+        self._stream = (0, None)
+
+    def update(self):
+        if time.time() - self._stream[0] > 600:
+            self._stream = (time.time(), self.song.stream.url)
+
+    @property
+    def uri(self):
+        self.update()
+        return self._stream[1]
+
+    @property
+    def user_uri(self):
+        return 'http://grooveshark.com/#!/s/{name}/{id}'.format(
+            name=quote_plus(self.song.name), id=self.song.id
+        )

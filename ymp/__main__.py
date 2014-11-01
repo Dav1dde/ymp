@@ -15,6 +15,10 @@ Future features:
   * multiple mainloops (maybe)
 '''
 
+# requires:
+#  * pip install git+https://github.com/koehlma/pygrooveshark.git
+#  * pip install soundcloud
+
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GObject
 # from pprint import pprint
@@ -22,6 +26,7 @@ import argparse
 import dbus
 import time
 
+from ymp.provider.grooveshark import GroovesharkProvider
 from ymp.provider.soundcloud import SoundCloudProvider
 from ymp.provider.youtube import YoutubeProvider
 from ymp.provider import SongProvider
@@ -89,6 +94,7 @@ def main():
     pp.register_provider(YoutubeProvider())
     if ns.soundcloud:
         pp.register_provider(SoundCloudProvider(ns.soundcloud))
+    pp.register_provider(GroovesharkProvider())
 
     playlists = set(map(str.strip, ns.playlist))
     for line in ns.pf or []:
