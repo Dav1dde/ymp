@@ -12,6 +12,15 @@ TITLE_REGEX = [
 ]
 
 
+def extract_artist_title(s):
+    for r in TITLE_REGEX:
+        m = r.match(s)
+        if m:
+            return (m.group('title'), m.group('artist'))
+
+    return (s, '')
+
+
 class Song(object):
     DEFINED_METADATA = dict(
         (e, getattr(Metadata, e)) for e in dir(Metadata)
@@ -102,12 +111,10 @@ class PafySong(Song):
             'length': self.pafy.length*1000000
         }
 
-        title = self.pafy.title
-        for r in TITLE_REGEX:
-            m = r.match(title)
-            if m:
-                data.update(m.groupdict({'title': title}))
-                break
+        (title, artist) = extract_artist_title(self.pafy.title)
+        if title and artist:
+            data['title'] = title
+            data['artist'] = artist
 
         self.set_metadata(**data)
 
@@ -144,3 +151,34 @@ class PafySong(Song):
         return super().metadata
 
 
+class SoundCloudSong(Song):
+    def __init__(self, track, soundcloud):
+        if 'stream_url' not in track:
+            raise ValueError('Unable to retrieve stream url from soundcloud')
+
+        (title, artist) = extract_artist_title(track['title'])
+
+        Song.__init__(
+            self, None, str(track['id']), title=title, artist=artist,
+            art_url=track['artwork_url'], length=track['duration']*1000
+        )
+
+        self.track = track
+        self.soundcloud = soundcloud
+
+    def update(self):
+        if self._uri is not None:
+            return
+
+        self._uri = self.soundcloud.get(
+            self.track['stream_url'], allow_redirects=False
+        ).location
+
+    @property
+    def uri(self):
+        self.update()
+        return self._uri
+
+    @property
+    def user_uri(self):
+        return self.track['permalink_url']

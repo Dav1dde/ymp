@@ -12,7 +12,11 @@ from ymp.lib import pafy
 class _YoutubeProviderBase(object):
     def responsible_for(self, uri):
         o = urlparse(uri)
-        return o.scheme in ('http', 'https') and 'youtube' in o.netloc
+        return (
+            o.scheme in ('http', 'https') and
+            'youtube' in o.netloc and
+            'playlist' in o.path
+        )
 
 
 class YoutubeProviderPafy(_YoutubeProviderBase):

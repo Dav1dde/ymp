@@ -22,6 +22,7 @@ import argparse
 import dbus
 import time
 
+from ymp.provider.soundcloud import SoundCloudProvider
 from ymp.provider.youtube import YoutubeProvider
 from ymp.provider import SongProvider
 from ymp.backend.vlc import VLCBackend
@@ -56,6 +57,11 @@ def main():
     )
 
     parser.add_argument(
+        '--soundcloud', dest='soundcloud', default=None,
+        help='Soundcloud client id, can be generated for free'
+    )
+
+    parser.add_argument(
         '-r', '--repeat', dest='repeat', action='store_true',
         help='Play playlists on repeat'
     )
@@ -79,6 +85,10 @@ def main():
     pp = SongProvider()
     pp.shuffle = ns.shuffle
     pp.repeat = ns.repeat
+
+    pp.register_provider(YoutubeProvider())
+    if ns.soundcloud:
+        pp.register_provider(SoundCloudProvider(ns.soundcloud))
 
     playlists = set(map(str.strip, ns.playlist))
     for line in ns.pf or []:
