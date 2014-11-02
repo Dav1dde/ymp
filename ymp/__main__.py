@@ -96,7 +96,7 @@ def main():
         pp.register_provider(SoundCloudProvider(ns.soundcloud))
     pp.register_provider(GroovesharkProvider())
 
-    playlists = set(map(str.strip, ns.playlist))
+    playlists = set(filter(bool, map(str.strip, ns.playlist)))
     for line in ns.pf or []:
         playlists.add(line.strip())
 
