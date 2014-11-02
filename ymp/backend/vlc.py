@@ -328,6 +328,7 @@ class VLCBackend(Backend):
         return self.provider.current_playlist.dbus_playlist
 
     def activate_playlist(self, playlistid):
+        self.stop()
         self.provider.activate_playlist(playlistid)
         self.play_song(
             self.provider.current_song, play=True, next=True, previous=True
