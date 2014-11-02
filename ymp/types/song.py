@@ -193,18 +193,27 @@ class GroovesharkSong(Song):
             self, None, song.id, title=song.name, artist=song.artist.name,
             album=song.album.name, art_url=song._cover_url
         )
-        # TODO include length/song.duration
+
+        # maybe duration is None ...
+        if song.duration is not None:
+            self._metadata[Metadata.LENGTH] = int(song.duration)*1000000
 
         self.song = song
         self._stream = (0, None)
+        # force an update once the stream has been played
+        # (or the uri haas been requested from this instance)
+        # since grooveshark invalidates stream key
+        self._force_update = True
 
     def update(self):
-        if time.time() - self._stream[0] > 600:
+        if time.time() - self._stream[0] > 600 or self._force_update:
             self._stream = (time.time(), self.song.stream.url)
+            self._force_update = False
 
     @property
     def uri(self):
         self.update()
+        self._force_update = True
         return self._stream[1]
 
     @property

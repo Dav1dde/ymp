@@ -31,8 +31,7 @@ class GroovesharkProvider(object):
 
         id = m.group('id')
         p = self.grooveshark.playlist(id)
-        # TODO use album cover?
-        playlist = Playlist(p.name)
+        playlist = Playlist(p.name, icon=p._cover_url)
 
         for song in p.songs:
             playlist.add(GroovesharkSong(song))
