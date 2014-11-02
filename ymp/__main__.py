@@ -8,16 +8,11 @@ Recommended gnome plugin:
 https://extensions.gnome.org/extension/55/media-player-indicator/
 
 Future features:
-  * Grooveshark
   * Webinterface
   * m3u/pls playlists
   * multiple backends (probably)
   * multiple mainloops (maybe)
 '''
-
-# requires:
-#  * pip install git+https://github.com/koehlma/pygrooveshark.git
-#  * pip install soundcloud
 
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GObject
