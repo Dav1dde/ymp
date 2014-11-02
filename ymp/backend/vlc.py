@@ -215,7 +215,7 @@ class VLCBackend(Backend):
 
     def can_pause(self):
         # return self.player.is_playing() == 1
-        return self.player.can_pause() == 1 and self.player.is_playing() == 1
+        return self.player.can_pause() == 1
 
     def can_seek(self):
         return self.player.is_seekable() == 1
@@ -240,7 +240,7 @@ class VLCBackend(Backend):
         self._is_stopped = False
 
     def play_pause(self):
-        if self._is_stopped and self._has_media:
+        if self._is_stopped:
             # explicitly play if stopped, or else vlc won't start playback
             return self.play()
         self.player.pause()
@@ -284,7 +284,7 @@ class VLCBackend(Backend):
             media.add_option('stop-time={:.3f}'.format(song.end))
 
         if play:
-            self.player.play()
+            self.play()
 
         if next and self.provider.has_next:
             self.provider.next.update()
