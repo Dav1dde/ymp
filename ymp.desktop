@@ -5,6 +5,6 @@ GenericName=Ymp music player for playlists
 Comment=Ymp music player for playlists
 Exec=ymp
 Icon=ymp
-Terminal=true
+Terminal=false
 Type=Application
 Categories=Utility;
