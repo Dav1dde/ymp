@@ -1,19 +1,3 @@
-'''
-Yolo Media Player or Youtube Media Player
-
-This media player currently supports Youtube playlists and
-exports a Mpris2 interface to control it.
-
-Recommended gnome plugin:
-https://extensions.gnome.org/extension/55/media-player-indicator/
-
-Future features:
-  * Webinterface
-  * m3u/pls playlists
-  * multiple backends (probably)
-  * multiple mainloops (maybe)
-'''
-
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GObject
 # from pprint import pprint
@@ -39,7 +23,7 @@ def _backend(name):
 
 
 def main():
-    parser = argparse.ArgumentParser(__doc__, fromfile_prefix_chars='@')
+    parser = argparse.ArgumentParser('ymp', fromfile_prefix_chars='@')
 
     parser.add_argument(
         '-f', '--playlist-file', dest='pf', type=argparse.FileType('r'),
@@ -67,7 +51,7 @@ def main():
     )
 
     parser.add_argument(
-        '--backend', dest='backend', type=_backend,
+        '--backend', dest='backend', type=_backend, default=VLCBackend,
         help='Sound backend for playing music. Currently only supports VLC'
     )
 
@@ -91,7 +75,7 @@ def main():
         pp.register_provider(SoundCloudProvider(ns.soundcloud))
     pp.register_provider(GroovesharkProvider())
 
-    playlists = set(filter(bool, map(str.strip, ns.playlist)))
+    playlists = set(filter(bool, map(str.strip, ns.playlist or [])))
     for line in ns.pf or []:
         playlists.add(line.strip())
 

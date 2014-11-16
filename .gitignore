@@ -2,3 +2,6 @@
 *.kdev4
 __pycache__
 args.txt
+build/
+dist/
+*.egg-info/

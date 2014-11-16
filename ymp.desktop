@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0.0a
+Name=Ymp
+GenericName=Ymp music player for playlists
+Comment=Ymp music player for playlists
+Exec=ymp
+Icon=ymp
+Terminal=true
+Type=Application
+Categories=Utility;
