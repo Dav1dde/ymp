@@ -22,7 +22,8 @@ class MediaPlayer2(
 ):
     def __init__(self, backend):
         bus_name = dbus.service.BusName(
-            'org.mpris.MediaPlayer2.ymp', bus=dbus.SessionBus()
+            'org.mpris.MediaPlayer2.ymp',
+            bus=dbus.SessionBus(), do_not_queue=True
         )
 
         dbus.service.Object.__init__(
