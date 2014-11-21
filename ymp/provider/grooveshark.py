@@ -5,6 +5,7 @@ import re
 
 from ymp.dbus.types.metadata import Metadata
 from ymp.player.playlist import Playlist
+from ymp.provider import Provider
 from ymp.player.song import Song
 
 
@@ -49,7 +50,7 @@ class GroovesharkSong(Song):
         )
 
 
-class GroovesharkProvider(object):
+class GroovesharkProvider(Provider):
     def __init__(self):
         self.grooveshark = grooveshark.Client()
         self.grooveshark.init()

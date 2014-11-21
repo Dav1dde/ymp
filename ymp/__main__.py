@@ -5,9 +5,9 @@ import argparse
 import dbus
 import time
 
-from ymp.provider import (
-    GroovesharkProvider, SoundCloudProvider, YoutubeProvider
-)
+from ymp.provider.grooveshark import GroovesharkProvider
+from ymp.provider.soundcloud import SoundCloudProvider
+from ymp.provider.youtube import YoutubeProvider
 from ymp.player.ymp import YmpMediaPlayer
 from ymp.backend.vlc import VLCBackend
 from ymp.dbus import MediaPlayer2

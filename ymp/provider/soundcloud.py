@@ -4,11 +4,13 @@ import re
 
 from ymp.player.song import Song, extract_artist_title
 from ymp.player.playlist import Playlist
+from ymp.provider import Provider
 
 
 _SOUND_CLOUD_SET_RE = re.compile(
     r'/(?P<author>[\w,\-,_]+)/sets/(?P<playlist>[\w,\-,_]+)$'
 )
+
 
 class SoundCloudSong(Song):
     def __init__(self, track, soundcloud):
@@ -43,7 +45,7 @@ class SoundCloudSong(Song):
         return self.track['permalink_url']
 
 
-class SoundCloudProvider(object):
+class SoundCloudProvider(Provider):
     def __init__(self, client_id):
         self.soundcloud = soundcloud.Client(client_id=client_id)
 

@@ -1,7 +1,3 @@
-from ymp.provider.grooveshark import GroovesharkProvider
-from ymp.provider.soundcloud import SoundCloudProvider
-from ymp.provider.youtube import YoutubeProvider
-
 from abc import ABCMeta, abstractclassmethod
 
 
@@ -13,3 +9,7 @@ class Provider(metaclass=ABCMeta):
     @abstractclassmethod
     def load(self, playlist):
         pass
+
+    @staticmethod
+    def all_providers():
+        return Provider.__subclasses__()

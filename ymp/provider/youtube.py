@@ -7,6 +7,7 @@ import re
 
 from ymp.player.song import Song, TITLE_REGEX, extract_artist_title
 from ymp.player.playlist import Playlist
+from ymp.provider import Provider
 from ymp.lib import pafy
 
 
@@ -79,7 +80,7 @@ class PafySong(Song):
         return super().metadata
 
 
-class _YoutubeProviderBase(object):
+class _YoutubeProviderBase(Provider):
     def responsible_for(self, uri):
         o = urlparse(uri)
         return (
