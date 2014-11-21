@@ -129,6 +129,7 @@ class VLCBackend(Backend):
         vol = self.volume()
         if self._has_media and not vol == self._old_volume:
             self.emit_notification('Volume', vol)
+            self._old_volume = vol
 
         return not self._stop
 
@@ -189,7 +190,14 @@ class VLCBackend(Backend):
 
     def volume(self, arg=None):
         if arg is None:
-            return float(min(max(0, self.player.audio_get_volume() / 100.0), 1.0))
+            if self.player.audio_get_mute() > 0:
+                return 0.0
+
+            return float(
+                min(max(0, self.player.audio_get_volume() / 100.0), 1.0)
+            )
+        # TODO: check why audio_set_mute
+        # doesn't unmute audio (when muted over pulseaudio)
         self.player.audio_set_volume(int(min(max(0, arg*100.0), 100)))
         self.emit_notification('Volume')
 
