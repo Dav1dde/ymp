@@ -1,7 +1,7 @@
 *.pyc
 *.kdev4
 __pycache__
-args.txt
+*.txt
 build/
 dist/
 *.egg-info/
