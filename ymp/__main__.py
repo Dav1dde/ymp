@@ -5,10 +5,10 @@ import argparse
 import dbus
 import time
 
-from ymp.provider.grooveshark import GroovesharkProvider
-from ymp.provider.soundcloud import SoundCloudProvider
-from ymp.provider.youtube import YoutubeProvider
-from ymp.provider import SongProvider
+from ymp.provider import (
+    GroovesharkProvider, SoundCloudProvider, YoutubeProvider
+)
+from ymp.player.ymp import YmpMediaPlayer
 from ymp.backend.vlc import VLCBackend
 from ymp.dbus import MediaPlayer2
 
@@ -66,7 +66,7 @@ def main():
     loop = GObject.MainLoop()
     DBusGMainLoop(set_as_default=True)
 
-    pp = SongProvider()
+    pp = YmpMediaPlayer()
     pp.shuffle = ns.shuffle
     pp.repeat = ns.repeat
 

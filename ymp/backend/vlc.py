@@ -3,7 +3,6 @@ from ymp.dbus.types.ordering import PlaylistOrdering
 from ymp.dbus.types.playback import PlaybackStatus
 from ymp.dbus.types.metadata import Metadata
 from ymp.dbus.types.loop import LoopStatus
-from ymp.types.song import Song
 from ymp.backend import Backend
 from ymp.utility import enforce
 from ymp.lib import vlc

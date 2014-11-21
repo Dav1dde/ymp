@@ -2,13 +2,45 @@ from urllib.parse import urlparse
 import soundcloud
 import re
 
-from ymp.types.song import SoundCloudSong
-from ymp.types.playlist import Playlist
+from ymp.player.song import Song, extract_artist_title
+from ymp.player.playlist import Playlist
 
 
 _SOUND_CLOUD_SET_RE = re.compile(
     r'/(?P<author>[\w,\-,_]+)/sets/(?P<playlist>[\w,\-,_]+)$'
 )
+
+class SoundCloudSong(Song):
+    def __init__(self, track, soundcloud):
+        if 'stream_url' not in track:
+            raise ValueError('Unable to retrieve stream url from soundcloud')
+
+        (title, artist) = extract_artist_title(track['title'])
+
+        Song.__init__(
+            self, None, str(track['id']), title=title, artist=artist,
+            art_url=track['artwork_url'], length=track['duration']*1000
+        )
+
+        self.track = track
+        self.soundcloud = soundcloud
+
+    def update(self):
+        if self._uri is not None:
+            return
+
+        self._uri = self.soundcloud.get(
+            self.track['stream_url'], allow_redirects=False
+        ).location
+
+    @property
+    def uri(self):
+        self.update()
+        return self._uri
+
+    @property
+    def user_uri(self):
+        return self.track['permalink_url']
 
 
 class SoundCloudProvider(object):
@@ -42,7 +74,4 @@ class SoundCloudProvider(object):
             playlist.add(SoundCloudSong(track, self.soundcloud))
 
         return playlist
-
-
-
 

@@ -1,12 +1,82 @@
 from locale import getpreferredencoding
 from subprocess import Popen, PIPE
 from urllib.parse import urlparse
+import time
 import json
 import re
 
-from ymp.types.song import Song, PafySong, TITLE_REGEX
-from ymp.types.playlist import Playlist
+from ymp.player.song import Song, TITLE_REGEX, extract_artist_title
+from ymp.player.playlist import Playlist
 from ymp.lib import pafy
+
+
+class PafySong(Song):
+    def __init__(self, pafy):
+        Song.__init__(self, None, pafy.videoid)
+
+        self.pafy = pafy
+        self.start = pafy.playlist_meta['start']
+        self.end = pafy.playlist_meta['end']
+
+    # we want to load data lazily
+    def _update_once(self):
+        # if the pafy object has already fetched data once
+        # that is enough, since this method does not care
+        # about the actual media url, see `update` for more
+        if self.pafy._have_basic:
+            return
+
+        # we don't need to force it via pafy._have_basic = False
+        # but explicitly fetch data if it isn't already
+        self.pafy.fetch_basic()
+
+        data = {
+            'title': self.pafy.title,
+            'user_rating': self.pafy.rating,
+            # TODO maybe safe to disc
+            'art_url': self.pafy.thumb,
+            # pafy.length in seconds, length in microseconds
+            'length': self.pafy.length*1000000
+        }
+
+        (title, artist) = extract_artist_title(self.pafy.title)
+        if title and artist:
+            data['title'] = title
+            data['artist'] = artist
+
+        self.set_metadata(**data)
+
+    def update(self):
+        # TODO maybe make this async, threads?
+        # we need to update for expiry at least once
+        self._update_once()
+
+        now = time.time()
+
+        # expires in 10 minutes
+        if self.pafy.expiry - now < 600:
+            # definitly update!
+            self.pafy._have_basic = False
+            self.pafy.fetch_basic()
+
+    @property
+    def uri(self):
+        self.update()
+        # there is getbestaudio()
+        # but for some reason seeking back in a pure audio m4a
+        # doesn't seem to work in vlc
+        return self.pafy.getbest().url
+
+    @property
+    def user_uri(self):
+        # no update required
+        return self.pafy.watchv_url
+
+    @property
+    def metadata(self):
+        # we need to set metadata right here
+        self._update_once()
+        return super().metadata
 
 
 class _YoutubeProviderBase(object):
@@ -17,7 +87,6 @@ class _YoutubeProviderBase(object):
             'youtube' in o.netloc and
             'playlist' in o.path
         )
-
 
 class YoutubeProviderPafy(_YoutubeProviderBase):
     def __init__(self):
