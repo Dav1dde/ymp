@@ -3,12 +3,12 @@ from subprocess import Popen, PIPE
 from urllib.parse import urlparse
 import time
 import json
+import pafy
 import re
 
 from ymp.player.song import Song, TITLE_REGEX, extract_artist_title
 from ymp.player.playlist import Playlist
 from ymp.provider import Provider
-from ymp.lib import pafy
 
 
 class PafySong(Song):
