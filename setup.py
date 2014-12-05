@@ -17,11 +17,11 @@ if __name__ == '__main__':
         packages=find_packages(),
         install_requires=[
             'soundcloud'
-            'pygrooveshark'
+        #    'pygrooveshark'
         ],
-        dependency_links=[
-            'git+https://github.com/koehlma/pygrooveshark.git'
-        ],
+        #dependency_links=[
+        #    'git+https://github.com/koehlma/pygrooveshark.git'
+        #],
         entry_points={
             'console_scripts': [
                 'ymp = ymp.__main__:main'
