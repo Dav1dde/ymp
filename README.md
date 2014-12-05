@@ -26,6 +26,7 @@ YMP currently uses libVLC as a backend and is written entirely in Python.
 Dependencies:
 * libVLC
 * Python 3
+* Python 3 Dbus
 * [pafy](https://pypi.python.org/pypi/Pafy/0.3.66)
 * [pygrooveshark](https://github.com/koehlma/pygrooveshark)
 * [soundcloud](https://pypi.python.org/pypi/soundcloud/0.4.1)
@@ -42,7 +43,7 @@ or the matching folders in your home directory).
 ### Ubuntu/Debian ###
 
 ```
-sudo apt-get install python3 python3-pip libvlc-dev
+sudo apt-get install python3 python3-pip python3-dbus libvlc-dev
 ```
 
 ```
@@ -52,7 +53,7 @@ sudo pip3 -r requirements.txt
 ### Arch Linux ###
 
 ```
-pacman -S vlc python python-pip
+pacman -S vlc python python-pip python-dbus
 ```
 
 ```
