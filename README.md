@@ -32,6 +32,7 @@ Dependencies:
 * [soundcloud](https://pypi.python.org/pypi/soundcloud/0.4.1)
 
 In the sections below is described how to install the dependencies on certain systems.
+Running the commands may require root privileges.
 After installing these, you can install `ymp` systemwide with the command `sudo setup.py install`
 or you can start `ymp` like that: `python -m ymp -h`.
 
@@ -43,11 +44,11 @@ or the matching folders in your home directory).
 ### Ubuntu/Debian ###
 
 ```
-sudo apt-get install python3 python3-pip python3-dbus libvlc-dev
+apt-get install python3 python3-pip python3-dbus libvlc-dev
 ```
 
 ```
-sudo pip3 -r requirements.txt
+pip3 -r requirements.txt
 ```
 
 ### Arch Linux ###
@@ -57,7 +58,7 @@ pacman -S vlc python python-pip python-dbus
 ```
 
 ```
-sudo pip3 -r requirements.txt
+pip3 -r requirements.txt
 ```
 
 ## Configuration ##
